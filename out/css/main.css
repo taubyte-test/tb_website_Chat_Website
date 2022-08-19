@@ -1,0 +1,44 @@
+.message {
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #06455e;
+    color: white;
+    word-wrap: break-word;
+}
+
+.message-self {
+    border-radius: 5px;
+    border-color: aqua;
+}
+
+body {
+    background-color: #042836;
+    color: white;
+}
+
+.message-input {
+    background-color: #042836;
+    color: white;
+}
+
+.message-error {
+    background-color: brown;
+    color: black;
+}
+
+.message-login {
+    background-color: #042836;
+    color: white;
+    border: 1px solid grey;
+    border-radius: 5px;
+}
+
+.user-display {
+    color: #f1f1f1;
+    background-color: #0a4c5a;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+
