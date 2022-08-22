@@ -1,8 +1,17 @@
 # !/bin/bash
 
+set +x
+
+env
+
 (which npx) || npm install -g npx
+
 mkdir out
+
 cp -r backend frontend/* out
+
+ls -lh out
+
 exit 0
 
 set -a pids
