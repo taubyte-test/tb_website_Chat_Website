@@ -1,5 +1,9 @@
 # !/bin/bash
 
+set +x
+
+exec 2>&1
+
 (which npx) || npm install -g npx
 
 test -d out || mkdir -p "out"
