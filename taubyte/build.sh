@@ -4,10 +4,13 @@ set +x
 
 exec 2>&1
 
-(which npx) || npm install -g npx
+(
+    (which npx) || npm install -g npx
 
-test -d out || mkdir -p "out"
-rm -fr out/*
+    test -d out || mkdir -p "out"
+    rm -fr out/*
+) || true
+
 cp -r backend frontend/* out
 
 set -a pids
