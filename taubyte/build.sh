@@ -3,6 +3,7 @@
 (which npx) || npm install -g npx
 
 cp -r backend frontend/* out
+exit 0
 
 set -a pids
 
