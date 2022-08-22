@@ -1,7 +1,7 @@
 # !/bin/bash
 
 (which npx) || npm install -g npx
-
+mkdir out
 cp -r backend frontend/* out
 exit 0
 
