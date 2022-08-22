@@ -1,8 +1,14 @@
 # !/bin/bash
 
+echo "here 1"
+
 set +x
 
+echo "here 2"
+
 exec 2>&1
+
+echo "here 3"
 
 (
     (which npx) || npm install -g npx
@@ -11,7 +17,11 @@ exec 2>&1
     rm -fr out/*
 ) || true
 
+echo "here 4"
+
 cp -r backend frontend/* out
+
+echo "here 5"
 
 set -a pids
 
