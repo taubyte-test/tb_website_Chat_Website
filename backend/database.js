@@ -2,7 +2,7 @@ class DatabaseHandler{
     constructor(){}
 
     saveMessage(message, hash){
-        fetch(host+"/"+"save", {method: 'POST', headers:{
+        fetch(host+"/"+"message", {method: 'POST', headers:{
            'message':message,
            'user': username,
            'timestamp': Date.now(),
@@ -21,7 +21,7 @@ class DatabaseHandler{
    }
 
    getMessages(secretHash){    
-           fetch(host+"/"+"getMessages", {method: 'POST', headers:{
+           fetch(host+"/"+"messages", {method: 'GET', headers:{
                'secret': secretHash
            }})
            .then(async function (response){
@@ -32,9 +32,7 @@ class DatabaseHandler{
                }
            })
            .then((data)=>{
-            //    let topClass = "message"
                for (let i =0; i <data.length; i++){
-                //    this.pushMessage(topClass, data[i].user,data[i].msg)
                 document.getElementById("box").innerHTML += `
                 <div class="message">
                     <div class="message-body">

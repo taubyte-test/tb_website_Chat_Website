@@ -1,14 +1,14 @@
 let host = window.location.origin
-window.version = "PRINT THIS OUT"
 let username = localStorage.getItem("username")
+
 if (!username || username.length == 0) {
     window.location.href = "login"
 }
 
-fetch(host + "/" + "getsocketurl")
+fetch(host + "/ws/url")
     .then(async function (response) {
-        let socketURL = await response.text()
-        connect(host.replace("http", "ws") + "/" + socketURL)
+        let wsURL = await response.text()
+        connect(host.replace("http", "ws") + "/" + wsURL)
     })
     .catch(function (error) {
         console.log("Error getting socket url: ", error.message.valueOf())
