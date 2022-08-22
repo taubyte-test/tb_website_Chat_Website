@@ -30,5 +30,5 @@ for name in $(find . -iname "*.html" -o -iname "*.js" -o -iname "*.css")
 do
     npx minify ${name} > ${name}.min
     rm ${name}
-    mv ${name}{.min,}
+    mv ${name}.min ${name}
 done
