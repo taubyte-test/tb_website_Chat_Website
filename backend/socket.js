@@ -1,51 +1,3 @@
-function connect(url) {
-    let socket = new TauSocket(url)
-
-    messageBox = document.getElementById("messageInput")
-    let shiftDown = false
-    let typingInterval = null
-    messageBox.addEventListener("keydown", (event) => {
-        socket.typing = true
-        if (typingInterval != null) {
-            clearInterval(typingInterval)
-        }
-        typingInterval = setInterval(() => {
-            socket.typing = false
-        }, 2000)
-
-        if (event.key == "Shift") {
-            shiftDown = true
-        } else if (event.key == "Tab") {
-            event.preventDefault()
-            messageBox.value += "\t"
-        }
-    })
-    messageBox.addEventListener("keyup", (event) => {
-        if (event.key == "Shift") {
-            shiftDown = false
-        } else if (shiftDown == false && event.key == "Enter") {
-            if (typingInterval != null) {
-                clearInterval(typingInterval)
-            }
-            socket.typing = false
-            socket.sendMessage()
-        }
-    })
-}
-
-
-
-const encryptWithAES = (text, passphrase) => {
-  return CryptoJS.AES.encrypt(text, passphrase).toString();
-};
-
-const decryptWithAES = (ciphertext, passphrase) => {
-  const bytes = CryptoJS.AES.decrypt(ciphertext, passphrase);
-  const originalText = bytes.toString(CryptoJS.enc.Utf8);
-  return originalText;
-};
-
-
 class TauSocket extends WebSocket {
     constructor(url) {
         super(url)
@@ -60,6 +12,8 @@ class TauSocket extends WebSocket {
         this.typing = false
 
         this.key = window.localStorage.getItem("enc-key")
+        this.encrypter = new Encrypter() // Create new encryption/decryption class
+        this.databaseHandler = new DatabaseHandler() // Create new DatabaseHandler to save/get messages
 
         // set heartbeat interval
         this.heartbeat = setInterval(() => {
@@ -68,7 +22,7 @@ class TauSocket extends WebSocket {
                 user: username,
                 typing: this.typing,
             }))
-            this.updateUsers()
+            this.users = updateUsers(this.users)
         }, 1000)
     }
 
@@ -77,19 +31,32 @@ class TauSocket extends WebSocket {
         if (message.startsWith("{") && message.endsWith("}")) {
             this.handleMessageJson(message)
         } else {
-            this.tryToDecrypt(message)
+            let newMessage = this.encrypter.decryptWithAES(message, this.key)
+            if (newMessage.startsWith("{") && newMessage.endsWith("}")) {
+                this.handleMessageJson(newMessage)
+            }
         }
     }
 
-    tryToDecrypt(message) {
-        let newMessage = decryptWithAES(message, this.key)
-        if (newMessage.startsWith("{") && newMessage.endsWith("}")) {
-            this.handleMessageJson(newMessage)
-        }
+    onopen(e) {
+        e.target.send(JSON.stringify({
+            "type": "login",
+            "user": username
+        }))
     }
 
-    tryToEncrypt(message) {
-        return encryptWithAES(message, this.key)
+    onclose() {
+        this.writeErrorText({
+            text: "disconnected",
+        })
+    }
+
+    onerror() {
+        e.data.text().then((text) => {
+            this.writeErrorText({
+                text: text,
+            })
+        })
     }
 
     handleMessageJson(message) {
@@ -144,39 +111,22 @@ class TauSocket extends WebSocket {
         }
     }
 
-    onopen(e) {
-        e.target.send(JSON.stringify({
-            "type": "login",
-            "user": username
-        }))
-    }
-
-    onclose() {
-        this.writeErrorText({
-            text: "disconnected",
-        })
-    }
-
-    onerror() {
-        e.data.text().then((text) => {
-            this.writeErrorText({
-                text: text,
-            })
-        })
-    }
-
     sendMessage() {
         let toSend = JSON.stringify({
             type: "message",
             text: messageBox.value,
-            user: username
+            user: username,
+            timestamp: Date.now()
         })
-
+        
+        let secretHash = ""
         if (this.key && this.key.length != 0) {
-            toSend = this.tryToEncrypt(toSend)
+            toSend = this.encrypter.encryptWithAES(toSend, this.key)
+            secretHash = this.encrypter.hashKeySha1(this.key)
         }
-
+        
         this.send(toSend)
+        this.databaseHandler.saveMessage(messageBox.value, secretHash)
 
         messageBox.value = ""
     }
@@ -192,15 +142,7 @@ class TauSocket extends WebSocket {
             document.getElementById("user-" + m.user).innerHTML = ``
         }
 
-        document.getElementById("box").innerHTML += `
-        <div class="${topClass}">
-            <div class="message-body">
-                <div class="username-text" markdown=1>${m.user}:</div>  
-                <div class="message-text" markdown=1>
-                    ${marked.parse(m.text)}
-                </div>
-            </div>
-        </div>`
+        pushMessage(topClass, m.user, m.text)
         window.scrollTo(0, document.body.scrollHeight);
     }
 
@@ -232,36 +174,16 @@ class TauSocket extends WebSocket {
                 </div>
             </div>
         </div>`
-        this.updateUsers()
-        window.scrollTo(0, document.body.scrollHeight);
-    }
+        this.users = updateUsers(this.users)
 
-    updateUsers() {
-        let users = ""
-        for (let user in this.users) {
-            let _user = this.users[user]
-            if (_user.updated + 5000 < Date.now()) {
-                delete this.users[user]
-            } else if (_user.typing) {
-                users += `
-                <tr>
-                    <td class="user-display">${user}</td>
-                    <td id="user-${user}">
-                        <div class="dots">
-                            <div class="dot"></div>
-                            <div class="dot"></div>
-                            <div class="dot"></div>
-                        </div>
-                    </td>
-                </tr>`
-            } else {
-                users += `
-                <tr>
-                    <td class="user-display">${user}</td>
-                    <td id="user-${user}">
-                </tr>`
+        // Only push if user who joined also sent the message
+        if (m.user == username) {
+            let secretHash = ""
+            if (this.key && this.key.length != 0) {
+                secretHash = this.encrypter.hashKeySha1(this.key)
             }
-        }
-        document.getElementsByClassName("users-box")[0].innerHTML = users
+            this.databaseHandler.getMessages(secretHash)
+        } 
+        window.scrollTo(0, document.body.scrollHeight);
     }
 }

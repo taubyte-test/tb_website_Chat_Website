@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
-<title>WebSocket Test</title>
+<head>
+    <link rel="icon" type="image/png" sizes="48x48" href="./icons/favicon.ico">
+</head>
+<title>Taubyte's Chat</title>
 <div class="login-box">
     <form id="user-form" onsubmit="event.preventDefault();">
         <div class="user-box">
@@ -52,11 +55,11 @@
         }
     })
 
-
     function login() {
         let username = document.getElementById("username-box").value
         let key = document.getElementById("key-box").value
         if (username) {
+            localStorage.setItem("enc-key", "") //default key to ""
             if (key) {
                 localStorage.setItem("enc-key", key)
             }

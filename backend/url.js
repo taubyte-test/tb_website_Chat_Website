@@ -1,4 +1,5 @@
 let host = window.location.origin
+window.version = "PRINT THIS OUT"
 let username = localStorage.getItem("username")
 if (!username || username.length == 0) {
     window.location.href = "login"
