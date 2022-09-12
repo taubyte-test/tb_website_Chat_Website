@@ -6,6 +6,8 @@ exec 2>&1
 
 (
     (which npx) || npm install -g npx
+    
+    mv build /out
 
     rm -fr /out/*
 )
