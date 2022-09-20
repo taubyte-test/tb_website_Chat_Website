@@ -6,13 +6,9 @@ exec 2>&1
 
 (
     (which npx) || npm install -g npx
-    
-    mv build/* /out
-
-    rm -fr /out/*
 )
 
-cp -r backend frontend/* /out
+mv backend frontend/* /out
 
 cd /out
 for name in $(find . -iname "*.html" -o -iname "*.js" -o -iname "*.css")
