@@ -8,7 +8,7 @@ class TauSocket extends WebSocket {
         super.onclose = this.onclose
         super.onerror = this.onerror
 
-        this.users = {}
+        this.users = {} // test
         this.typing = false
 
         this.key = window.localStorage.getItem("enc-key")
